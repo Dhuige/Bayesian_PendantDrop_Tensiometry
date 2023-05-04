@@ -1,12 +1,9 @@
 import numpy as np
-import numpy.matlib
-import math as m
+from numpy.matlib import repmat
+#import math as m
 from scipy.linalg import toeplitz
 from scipy.special import gamma
-import scipy.sparse
-
-def __init__():
-   return
+from scipy.sparse import spdiags
 
 def dif1D(type,s0,L,N,pts):
     ''' [d/ds, d/ds^2, integral, s] = dif1D('type',s0,length,N_dof,order), creates
@@ -89,8 +86,8 @@ def ufdwt(h,pts,order): #Done
     Contact: gregvw@chtm.unm.edu'''
     N=2*pts-1; p1=pts-1; #done
 
-    A=numpy.matlib.repmat(np.arange(0,p1+1,1).reshape(1,p1+1).T,1,N) #done
-    B=numpy.matlib.repmat((np.arange(-p1,p1+1).reshape(1,2*p1+1))*h,pts,1) #done
+    A=repmat(np.arange(0,p1+1,1).reshape(1,p1+1).T,1,N) #done
+    B=repmat((np.arange(-p1,p1+1).reshape(1,2*p1+1))*h,pts,1) #done
 
     M=(B**A)/gamma(A+1) #done
 
@@ -111,7 +108,7 @@ def clencurt(N):#done
     bW=np.ones(N); bW[0]=0.5; bW[N-1]=0.5
     cW=2*bW
     bW=bW/(N-1) #done
-    S=np.cos(nW[2:N].reshape(N-2,1)*jW*(m.pi/(N-1))) #done
+    S=np.cos(nW[2:N].reshape(N-2,1)*jW*(np.pi/(N-1))) #done
     IW=bW*(2+np.dot(np.multiply(cW[2:N],(1+(-1)**nW[2:N])/(1-nW[2:N]**2)).reshape(1,N-2),S))
 
     return IW
@@ -138,19 +135,19 @@ def chebdif(N,M): # Done
     I = np.eye(N) # Indentity matrix
     L = I.astype(bool) # logical identity matrix
 
-    n1 = m.floor(N/2); n2=m.ceil(N/2) # Indices used for flipping trick
-
+    n1 = int(np.floor(N/2)); n2=int(np.ceil(N/2)) # Indices used for flipping trick
+    print(n1, n2)
     k = np.arange(0,N).reshape(1,N).T # Compute theta vector
-    th = k*m.pi/(N-1)
+    th = k*np.pi/(N-1)
 
-    x = np.sin(m.pi*np.arange(N-1,-N,-2).reshape(1,N).T/(2*(N-1)))# Compute Chebyshev points
+    x = np.sin(np.pi*np.arange(N-1,-N,-2).reshape(1,N).T/(2*(N-1)))# Compute Chebyshev points
 
-    T = numpy.matlib.repmat(th/2,1,N)
+    T = repmat(th/2,1,N)
     DX = 2*np.sin(T.T+T)*np.sin(T.T-T) # Trigonometric identity
     DX = np.vstack((DX[: n1],-np.rot90(DX[: n2],k=2))) # Flipping trick
     DX[L] = np.ones(N)
 
-    C = toeplitz((-1)**k).astype(numpy.float16)  #C is the matrix with entries c(k)/c(j)
+    C = toeplitz((-1)**k).astype(np.float16)  #C is the matrix with entries c(k)/c(j)
     C[0,:] = C[0,:]*2; C[N-1,:] = C[N-1,:]*2
     C[:,0] = C[:,0]/2; C[:,N-1] = C[:,N-1]/2; 
 
@@ -161,7 +158,7 @@ def chebdif(N,M): # Done
     DM = np.zeros((N,N,M))
 
     for ell in range (1,M+1):
-        D = ell*Z*(C*numpy.matlib.repmat(np.diag(D).reshape(1,N).T,1,N) - D)
+        D = ell*Z*(C*repmat(np.diag(D).reshape(1,N).T,1,N) - D)
         D[L] = -np.sum(D,axis=1)
         DM[:,:,ell-1] = D
     return x,DM

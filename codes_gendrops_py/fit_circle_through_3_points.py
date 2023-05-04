@@ -1,8 +1,4 @@
 import numpy as np
-import math as m
-
-def __init__():
-    return
 
 def fit_circle_through_3_points(ABC):# need rewrite
     ''' Mathematical background is provided in http://www.regentsprep.org/regents/math/geometry/gcg6/RCir.html
@@ -68,9 +64,9 @@ def fit_circle_through_3_points(ABC):# need rewrite
     if idf34==1: #Failure mode (3) or (4) ==> cannot determine center point, return None
         yc = None
     # ============= Compute the circle radius
-    R=m.sqrt((xc-x1)**2+(yc-y1)**2)
+    R=np.sqrt((xc-x1)**2+(yc-y1)**2)
     if idf34==1:
         R=float("inf")
     xcyc=np.array([xc,yc]).reshape(2,1)
 
-    return R,xcyc
+    return R, xcyc

@@ -1,14 +1,7 @@
-import math as m
 import numpy as np 
 import matplotlib.pyplot as plt
-import warnings
 from dif1D import *
 from fit_circle_through_3_points import *
-
-warnings.filterwarnings('ignore')
-
-def __init__():
-   return
 
 def rms(y) :
         rms = np.sqrt(np.mean(y**2))
@@ -28,7 +21,7 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
     #volume0 = 32;          # prescribed volume in mm^3
     grav = 9.807e3;         # gravitational acceleration [mm/s^2]
     deltarho = 1e-3;        # density difference [10^6 kg/m^3]
-    pi=m.pi
+    pi=np.pi
 
     # numerical parameters
     N = 40;                 # resolution of the discretization for calculation
@@ -48,19 +41,19 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
     if  deltarho*grav*volume0/(2*pi*sigma*rneedle) > 0.14:
 
         # predict the maximum length of the interface (empirical Nagel)
-        smax = m.sqrt(sigmaprime)*2.0/0.8701
+        smax = np.sqrt(sigmaprime)*2.0/0.8701
 
         # get the differentation/integration matrices and the grid
         D,_,w,s = dif1D('cheb',0,smax,N,5)
 
         # predict the shape of the interface (empirical Nagel)
-        z = -4/3*smax/m.pi*(np.cos(m.pi*3/4*s/smax))
+        z = -4/3*smax/np.pi*(np.cos(np.pi*3/4*s/smax))
         z = z - max(z)
-        r = 4/3*smax/m.pi*(np.sin(m.pi*3/4*s/smax))
-        psi = m.pi*3/4*s/smax
+        r = 4/3*smax/np.pi*(np.sin(np.pi*3/4*s/smax))
+        psi = np.pi*3/4*s/smax
 
         C = 1; # initial stretch parameter
-        p0 = m.sqrt(sigmaprime)*1.5; # predict the pressure (empirical Nagel)
+        p0 = np.sqrt(sigmaprime)*1.5; # predict the pressure (empirical Nagel)
 
     else:
 
@@ -69,23 +62,23 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
         h0 = np.real(rts[2])
 
         ABC=np.array(np.vstack(((1,0),(0,-h0),(-1,0))))
-        Rguess,xcyc = fit_circle_through_3_points(ABC)
+        Rguess, xcyc = fit_circle_through_3_points(ABC)
 
         # get the opening angle of the circle
 
         if xcyc[1] < 0:
-          theta = m.acos(1/Rguess)
+          theta = np.acos(1/Rguess)
         else:
-          theta = -m.acos(1/Rguess)
+          theta = -np.acos(1/Rguess)
 
         # predict the maximum length of the interface
-        smax = Rguess*(2*theta+m.pi)
+        smax = Rguess*(2*theta+np.pi)
 
         # get the differentation/integration matrices and the grid
         D,_,w,s = dif1D('fd',0,smax,N,5)
 
         # start- and end-point of the current radial line
-        dtheta = np.linspace(-m.pi/2,theta,N)
+        dtheta = np.linspace(-np.pi/2,theta,N)
         dtheta = dtheta.T
         r = xcyc[0] + Rguess*np.cos(dtheta).reshape((40,1))
         z = xcyc[1] + Rguess*np.sin(dtheta).reshape((40,1))
@@ -120,7 +113,7 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
       #  break
       # determine r from psi
       #start_l=time.time()
-      
+    
       A11 = C*D; 
       A13 = np.diag(np.squeeze(np.sin(psi)))
       A18 = np.dot(D,r); 
@@ -149,8 +142,8 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
         # determine pressure - use volume
       A91 = 2*w*r.T*np.sin(psi.T)
       A93 = w*r.T**2*np.cos(psi.T)
-      A98 = np.array(-volume0prime/m.pi).reshape(1,1)
-      b9 = -(np.dot(w,(r**2*np.sin(psi)))-C*volume0prime/m.pi)
+      A98 = np.array(-volume0prime/np.pi).reshape(1,1)
+      b9 = -(np.dot(w,(r**2*np.sin(psi)))-C*volume0prime/np.pi)
 
       # boundary condition r(0) = 0
       A11[0,:] = IDL; 
@@ -185,7 +178,7 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
       b = np.vstack((b1,b2,b3,b8,b9)); 
 
       # solve the system of equations
-      u = np.linalg.inv(A).dot(b)
+      u = np.linalg.solve(A,b) 
 
       # update variables
       r   = r   + alpha*u[0:N]
@@ -210,7 +203,7 @@ def genSingleDrop(sigma,volume0,rneedle,output=0,savepath='.'):
       plt.axis('off')
       plt.savefig(path,bbox_inches='tight',pad_inches=0.0)
       plt.close()
-      return path
+      return path, r_a, z_a
     else:
       return r_a,z_a
 
@@ -234,4 +227,4 @@ def plt_image_needle(r_a,z_a,path,l_needle=4,sigma=0,volume0=0,rneedle=1):
     plt.axis('equal')
     plt.axis('off')
     plt.savefig(path)
-    return
+    return 
